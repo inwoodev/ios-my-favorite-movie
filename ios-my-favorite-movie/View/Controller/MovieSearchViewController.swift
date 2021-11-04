@@ -16,22 +16,26 @@ class MovieSearchViewController: UIViewController {
         tableView.backgroundColor = .white
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(MovieTableViewCell.self, forCellReuseIdentifier: MovieTableViewCell.identifier)
+        tableView.rowHeight = 150
         return tableView
     }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.backgroundColor = .white
         setUpSearchController()
         setUpNavigation()
         addSubviews()
         setViewConstraints()
+        assignDelegates()
+        update()
     }
     
     private func setUpSearchController() {
-        searchController.searchResultsUpdater = self
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchBar.delegate = self
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search Movies"
-        searchController.searchBar.delegate = self
         definesPresentationContext = true
     }
     
@@ -42,6 +46,10 @@ class MovieSearchViewController: UIViewController {
     private func addSubviews() {
         self.view.addSubview(searchController.searchBar)
         self.view.addSubview(movieTableView)
+    }
+    
+    private func assignDelegates() {
+        movieTableView.dataSource = self
     }
     
     private func setViewConstraints() {
@@ -69,5 +77,29 @@ extension MovieSearchViewController: UISearchResultsUpdating {
 }
 
 extension MovieSearchViewController: UISearchBarDelegate {
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        guard let userInput = searchBar.text else { return }
+        
+        movieTableViewModel.handleSearchInput(userInput)
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension MovieSearchViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return movieTableViewModel.movieInformation.value?.count ?? 0
+    }
     
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: MovieTableViewCell.identifier, for: indexPath) as? MovieTableViewCell,
+              let movie = movieTableViewModel.movieInformation.value?[indexPath.row] else {
+            return UITableViewCell()
+        }
+        
+        cell.bind(MovieTableViewCellModel(movie: movie))
+        cell.fire()
+        
+        return cell
+    }
 }
