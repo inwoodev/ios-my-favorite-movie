@@ -8,8 +8,7 @@
 import UIKit
 
 class MovieSearchViewController: UIViewController {
-    
-    private let searchController = UISearchController(searchResultsController: nil)
+    private let movieTableViewModel = MovieTableViewModel()
     
     private let movieTableView: UITableView = {
         let tableView = UITableView()
@@ -37,14 +36,16 @@ class MovieSearchViewController: UIViewController {
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search Movies"
         definesPresentationContext = true
-    }
-    
-    private func setUpNavigation() {
         navigationItem.searchController = searchController
     }
     
+    private func setUpNavigation() {
+        navigationItem.title = "네이버 영화 검색"
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.hidesSearchBarWhenScrolling = true
+    }
+    
     private func addSubviews() {
-        self.view.addSubview(searchController.searchBar)
         self.view.addSubview(movieTableView)
     }
     
@@ -54,27 +55,25 @@ class MovieSearchViewController: UIViewController {
     
     private func setViewConstraints() {
         NSLayoutConstraint.activate([
-            searchController.searchBar.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
-            searchController.searchBar.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor),
-            searchController.searchBar.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor),
-            searchController.searchBar.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
-            
-            movieTableView.topAnchor.constraint(equalTo: searchController.searchBar.bottomAnchor, constant: 5),
+            movieTableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
             movieTableView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor),
             movieTableView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor),
             movieTableView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
         
         ])
-        
+    }
+    
+    private func update() {
+        movieTableViewModel.movieInformation.bind { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.movieTableView.reloadData()
+            }
+        }
     }
 
 }
-extension MovieSearchViewController: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        
-    }
-    
-}
+
+// MARK: - UISearchBarDelegate
 
 extension MovieSearchViewController: UISearchBarDelegate {
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
