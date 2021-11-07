@@ -9,21 +9,12 @@ import UIKit
 
 final class MovieTableViewCell: UITableViewCell {
     static let identifier = "MovieTableViewCell"
-    
+    weak var delegate: FavoriteMovieSelectionDelegate?
     private var viewModel: MovieTableViewCellModel?
-    
     private let movieDirectorLabel = TableViewCellDefaultLabel()
     private let movieActorsLabel = TableViewCellDefaultLabel()
     private let movieUserRatingLabel = TableViewCellDefaultLabel()
-    
-    private let movieTitleLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = true
-        label.font = UIFont.preferredFont(forTextStyle: .title3)
-        label.adjustsFontForContentSizeCategory = true
-        label.numberOfLines = 1
-        return label
-    }()
+    private let movieTitleLabel = TableViewCellTitleLabel()
     
     private lazy var movieInformationStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [movieTitleLabel, movieDirectorLabel, movieActorsLabel, movieUserRatingLabel])
@@ -41,6 +32,14 @@ final class MovieTableViewCell: UITableViewCell {
         return imageView
     }()
     
+    private lazy var favoriteMovieButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(named: "star_filled"), for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(onTappedFavoriteMovieButton), for: .touchUpInside)
+        return button
+    }()
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         addSubviews()
@@ -51,12 +50,19 @@ final class MovieTableViewCell: UITableViewCell {
         super.init(coder: coder)
     }
     
-    func addSubviews() {
-        self.contentView.addSubview(moviePosterView)
-        self.contentView.addSubview(movieInformationStackView)
+    @objc private func onTappedFavoriteMovieButton(_ sender: UIButton) {
+        guard let indexOfMovie = viewModel?.cellIndex else { return }
+        delegate?.handleFavoriteMovieStatus(at: indexOfMovie)
+        
     }
     
-    func setConstraints() {
+    private func addSubviews() {
+        self.contentView.addSubview(moviePosterView)
+        self.contentView.addSubview(movieInformationStackView)
+        self.contentView.addSubview(favoriteMovieButton)
+    }
+    
+    private func setConstraints() {
         NSLayoutConstraint.activate([
             moviePosterView.widthAnchor.constraint(equalToConstant: 90),
             moviePosterView.heightAnchor.constraint(equalToConstant: 120),
@@ -65,8 +71,13 @@ final class MovieTableViewCell: UITableViewCell {
             
             movieInformationStackView.topAnchor.constraint(equalTo: moviePosterView.topAnchor),
             movieInformationStackView.leadingAnchor.constraint(equalTo: moviePosterView.trailingAnchor, constant: 5),
-            movieInformationStackView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -5),
-            movieInformationStackView.bottomAnchor.constraint(equalTo: moviePosterView.bottomAnchor)
+            movieInformationStackView.bottomAnchor.constraint(equalTo: moviePosterView.bottomAnchor),
+            
+            favoriteMovieButton.heightAnchor.constraint(equalToConstant: 30),
+            favoriteMovieButton.widthAnchor.constraint(equalTo: favoriteMovieButton.heightAnchor),
+            favoriteMovieButton.topAnchor.constraint(equalTo: movieInformationStackView.topAnchor),
+            favoriteMovieButton.leadingAnchor.constraint(equalTo: movieInformationStackView.trailingAnchor, constant: 5),
+            favoriteMovieButton.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -5)
         ])
     }
     
@@ -79,21 +90,33 @@ final class MovieTableViewCell: UITableViewCell {
                 case .update(let metaData):
                     self?.applyViews(using: metaData)
                 case .error(let error):
-                    guard let dataAsset = NSDataAsset.init(name: "NoImage") else { return }
-                    self?.moviePosterView.image = UIImage(data: dataAsset.data)
+                    self?.moviePosterView.image = UIImage(named: "NoImage")
                     NSLog("No image on cell: \(error.localizedDescription)")
                 default:
                     break
                 }
             }
         }
+        
+        viewModel.favoriteButtonState.bind({ [weak self] state in
+            DispatchQueue.main.async {
+                switch state {
+                case .checked:
+                    self?.favoriteMovieButton.tintColor = .systemYellow
+                case .unchecked:
+                    self?.favoriteMovieButton.tintColor = .systemGray
+                default:
+                    break
+                }
+            }
+        })
     }
     
     func fire() {
         viewModel?.fire()
     }
     
-    private func applyViews(using metaData: MovieTableViewCellModel.MetaData) {
+    private func applyViews(using metaData: ContentMetaData) {
         self.movieTitleLabel.text = metaData.title
         self.moviePosterView.image = metaData.image
         self.movieDirectorLabel.text = "감독: \(metaData.director.replacingOccurrences(of: "|", with: ""))"
