@@ -10,7 +10,7 @@ import UIKit
 final class MovieTableViewModel {
     private let movieService: MovieServiceProtocol
     
-    private (set) var movieInformation: Observable<[Movie]> = Observable([])
+    private (set) var movieInformation: Observable<[MetaData]> = Observable([])
     
     init(movieService: MovieServiceProtocol) {
         self.movieService = movieService
@@ -23,15 +23,28 @@ final class MovieTableViewModel {
     }
     
     func handleSearchInput(_ queryValue: String) {
-        
         movieService.convertDataToSearchResult(using: queryValue, completion: { [weak self] result in
             
             switch result {
             case .failure(let dataError):
                 NSLog(dataError.description)
             case .success(let searchMovieResult):
-                self?.movieInformation.value? = searchMovieResult.items
+                let movieInformation = searchMovieResult.items
+                let metaData = movieInformation.compactMap { MetaData(title: $0.title, link: $0.link, image: $0.image, director: $0.director, actor: $0.actor, userRating: $0.userRating, favoriteStatus: .initial) }
+                self?.movieInformation.value? = metaData
             }
         })
+    }
+    
+    func handleFavoriteMovieStatus(of index: Int) {
+        guard let favoriteMovieStatus = self.movieInformation.value?[index].favoriteStatus else { return }
+        switch favoriteMovieStatus {
+        case .initial:
+            self.movieInformation.value?[index].favoriteStatus = .checked
+        case .checked:
+            self.movieInformation.value?[index].favoriteStatus = .unchecked
+        case .unchecked:
+            self.movieInformation.value?[index].favoriteStatus = .checked
+        }
     }
 }
