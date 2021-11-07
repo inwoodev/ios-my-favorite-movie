@@ -9,7 +9,7 @@ import UIKit
 
 enum MovieCellViewModelStates {
     case empty
-    case update(MovieTableViewCellModel.MetaData)
+    case update(ContentMetaData)
     case error(MovieCellViewModelError)
 }
 
@@ -18,26 +18,29 @@ enum MovieCellViewModelError: Error {
     case emptyImage
 }
 
+enum FavoriteButtonState {
+    case checked
+    case unchecked
+}
+
 final class MovieTableViewCellModel {
-    struct MetaData {
-        let title: String
-        var image: UIImage?
-        let director: String
-        let actors: String
-        let userRating: String
-    }
     private (set) var cellState: Observable<MovieCellViewModelStates> = Observable(.empty)
-    private let movie: Movie
+    private (set) var favoriteButtonState: Observable<FavoriteButtonState>
+    private (set) var cellIndex: Int
+    
+    private let metaData: MetaData
     private let movieImageService: MovieImageServiceProtocol
     
-    init(movie: Movie, movieImageService: MovieImageServiceProtocol) {
-        self.movie = movie
+    init(metaData: MetaData, movieImageService: MovieImageServiceProtocol, cellIndex: Int, favoriteButtonState: Observable<FavoriteButtonState>) {
+        self.metaData = metaData
         self.movieImageService = movieImageService
+        self.cellIndex = cellIndex
+        self.favoriteButtonState = favoriteButtonState
     }
     
-    convenience init(movie: Movie) {
+    convenience init(metaData: MetaData, cellIndex: Int, favoriteButtonState: Observable<FavoriteButtonState>) {
         let movieImageRepository = MovieImageRepository()
-        self.init(movie: movie, movieImageService: MovieImageService(movieImageRepository: movieImageRepository))
+        self.init(metaData: metaData, movieImageService: MovieImageService(movieImageRepository: movieImageRepository), cellIndex: cellIndex, favoriteButtonState: favoriteButtonState)
     }
     
     func fire() {
@@ -46,7 +49,7 @@ final class MovieTableViewCellModel {
     }
     
     func handleImage() {
-        guard let imageURL = try? movie.image.convertToURL() else { return }
+        guard let imageURL = try? metaData.image.convertToURL() else { return }
         
         movieImageService.loadDownloadedImage(imageURL) { [weak self] result in
             switch result {
@@ -63,15 +66,15 @@ final class MovieTableViewCellModel {
     }
     
     func updateText() {
-        guard let movieTitle = movie.title.htmlToString(),
-              let movieDirector = movie.director.htmlToString(),
-              let movieActors = movie.actor.htmlToString(),
-              let userRating = movie.userRating.htmlToString()
+        guard let movieTitle = metaData.title.htmlToString(),
+              let movieDirector = metaData.director.htmlToString(),
+              let movieActors = metaData.actor.htmlToString(),
+              let userRating = metaData.userRating.htmlToString(),
+              let movieSiteLink = try? metaData.link.convertToURL()
         else { return }
         
-        let metaData = MetaData(title: movieTitle, image: nil, director: movieDirector, actors: movieActors, userRating: userRating)
+        let contentMetaData = ContentMetaData(title: movieTitle, image: nil, director: movieDirector, actors: movieActors, userRating: userRating, link: movieSiteLink)
         
-        cellState.value = .update(metaData)
+        cellState.value = .update(contentMetaData)
     }
-    
 }
