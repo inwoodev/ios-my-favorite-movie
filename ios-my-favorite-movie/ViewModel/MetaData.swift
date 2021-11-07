@@ -7,7 +7,7 @@
 
 import UIKit
 
-struct MetaData {
+struct MetaData: Equatable {
     let title: String
     let link: String
     let image: String
