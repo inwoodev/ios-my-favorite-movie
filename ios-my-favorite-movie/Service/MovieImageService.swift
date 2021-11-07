@@ -14,6 +14,10 @@ final class MovieImageService: MovieImageServiceProtocol {
         self.movieImageRepository = movieImageRepository
     }
     
+    convenience init() {
+        self.init(movieImageRepository: MovieImageRepository())
+    }
+    
     func loadDownloadedImage(_ url: URL, completion: @escaping ( Result <UIImage, NetworkError>) -> Void) {
         movieImageRepository.downloadImage(from: url) { image, _ in
             guard let validImage = image else {
