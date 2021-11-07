@@ -1,0 +1,10 @@
+disabled_rules:
+    - line_length
+    - trailing_whitespace
+included:
+
+excluded:
+    - Pods
+    - ios-my-favorite-movie/AppDelegate.swift
+    - ios-my-favorite-movie/SceneDelegate.swift
+    - ios-my-favorite-movieTests/ios_my_favorite_movieTests.swift
