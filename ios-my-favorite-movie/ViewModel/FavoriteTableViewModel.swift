@@ -8,6 +8,7 @@
 import Foundation
 
 final class FavoriteMovieTableViewModel {
+    weak var delegate: FavoriteMovieStatusDetactable?
     private (set) var favoriteList: Observable<[MetaData]> = Observable([])
     
     func removeUnfavoriteMovie(cheking title: String) {
@@ -23,5 +24,9 @@ final class FavoriteMovieTableViewModel {
         }) {
             favoriteList.value?.append(selectedMovie)
         }
+    }
+    func notifyDeletedFavoriteMovies(using title: String) {
+        delegate?.detectChangeOfFavoriteMovieStatus(checking: title)
+        self.removeUnfavoriteMovie(cheking: title)
     }
 }

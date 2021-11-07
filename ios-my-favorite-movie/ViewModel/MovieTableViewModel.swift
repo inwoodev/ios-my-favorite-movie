@@ -48,3 +48,14 @@ final class MovieTableViewModel {
         }
     }
 }
+
+extension MovieTableViewModel: FavoriteMovieStatusDetactable {
+    func detectChangeOfFavoriteMovieStatus(checking title: String) {
+        guard var movieDataList = movieInformation.value else { return }
+        
+        for metaData in movieDataList.indices where movieDataList[metaData].title == title {
+            movieDataList[metaData].favoriteStatus = .unchecked
+        }
+        self.movieInformation.value = movieDataList
+    }
+}

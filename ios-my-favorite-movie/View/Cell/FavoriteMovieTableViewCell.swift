@@ -35,10 +35,9 @@ final class FavoriteMovieTableViewCell: UITableViewCell {
     private lazy var favoriteMovieButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(named: "star_filled"), for: .normal)
-        button.tintColor = .systemGray
+        button.tintColor = .systemYellow
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(onTappedUnfavoriteMovieButton), for: .touchUpInside)
-        button.isHidden = true
         return button
     }()
     
