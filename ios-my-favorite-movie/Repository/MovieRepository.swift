@@ -9,9 +9,9 @@ import Foundation
 
 final class MovieRepository: MovieRepositoryProtocol {
     private let requestFactory: RequestFactoryProtocol
-    private let urlSession: URLSession
+    private let urlSession: URLSessionProtocol
     
-    init(urlSession: URLSession = .shared, requestFactory: RequestFactoryProtocol) {
+    init(urlSession: URLSessionProtocol = URLSession.shared, requestFactory: RequestFactoryProtocol) {
         self.urlSession = urlSession
         self.requestFactory = requestFactory
     }

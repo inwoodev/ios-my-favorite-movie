@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SearchMovieResult: Decodable {
+struct SearchMovieResult: Codable {
     let lastBuildDate: String
     let total: Int
     let start: Int
