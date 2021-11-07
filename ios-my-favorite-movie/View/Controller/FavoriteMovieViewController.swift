@@ -108,6 +108,6 @@ extension FavoriteMovieViewController: UITableViewDelegate {
 
 extension FavoriteMovieViewController: MovieRemoveDelegate {
     func removeUncheckedMovie(using title: String) {
-        favoriteMovieTableViewModel.removeUnfavoriteMovie(cheking: title)
+        favoriteMovieTableViewModel.notifyDeletedFavoriteMovies(using: title)
     }
 }

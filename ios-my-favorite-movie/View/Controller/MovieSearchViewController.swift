@@ -106,6 +106,7 @@ extension MovieSearchViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         cell.delegate = self
+        favoriteTableViewModel.delegate = movieTableViewModel
         
         var favoriteButtonState = FavoriteButtonState.unchecked
         if movie.favoriteStatus == .checked {
