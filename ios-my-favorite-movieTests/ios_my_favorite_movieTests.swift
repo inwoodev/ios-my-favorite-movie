@@ -87,4 +87,28 @@ class ios_my_favorite_movieTests: XCTestCase {
         expect(self.favoriteMovieTableViewModel.favoriteList.value).to(haveCount(1), description: "즐겨찾기 목록은 2개에서 1개로 줄어들 것이다")
         expect(self.favoriteMovieTableViewModel.favoriteList.value).to(allPass({ $0?.title != StubMetaData.secondMovieMarkedFavorite.title}), description: "즐겨찾기 목록에 해제된 영화의 이름은 존재하지 않을 것이다.")
     }
+    
+    func test_즐겨찾기화면에서_사용자가_특정영화의_즐겨찾기를_해제하게되면_변경사항이_검색결과화면에_반영되는지_체크() {
+        // given 즐겨찾기 목록에 영화가 추가되었을 때
+        let firstIndex = 0
+        let stubFavoriteMarkedMovieList = [StubMetaData.firstMovieMarkedFavorite, StubMetaData.secondMovieMarkedFavorite]
+        movieTableViewModel.movieInformation.value?.append(contentsOf: stubFavoriteMarkedMovieList)
+        favoriteMovieTableViewModel.favoriteList.value?.append(contentsOf: stubFavoriteMarkedMovieList)
+        favoriteMovieTableViewModel.delegate = movieTableViewModel
+        
+        // when 사용자가 즐겨찾기목록의 첫 번째 영화 즐겨찾기를 해제할 경우
+        guard let titleOfMovieToBeRemoved = favoriteMovieTableViewModel.favoriteList.value?[firstIndex].title else { return }
+        favoriteMovieTableViewModel.notifyDeletedFavoriteMovies(using: titleOfMovieToBeRemoved)
+        
+        // then
+        guard let movieTableViewModelDataBase = movieTableViewModel.movieInformation.value else { return }
+        let uncheckedMovieList = movieTableViewModelDataBase.filter { $0.title == titleOfMovieToBeRemoved}
+        expect(uncheckedMovieList).to(containElementSatisfying({ movie in
+            return movie.favoriteStatus == .unchecked
+        }, "메인화면의 동일한 영화의 즐겨찾기 또한 해제될 것이다."))
+        expect(self.favoriteMovieTableViewModel.favoriteList.value).to(haveCount(1), description: "즐겨찾기 항목의 갯수는 2개에서 1개로 줄어들을 것이다.")
+        expect(self.favoriteMovieTableViewModel.favoriteList.value).notTo(containElementSatisfying({ movie in
+            return movie.title == StubMetaData.firstMovieMarkedFavorite.title
+        }, "즐겨찾기 항목에서 해제된 제목을 가진 영화는 더 이상 즐겨찾기 페이지에 존재하지 않을 것이다."))
+    }
 }
