@@ -113,7 +113,7 @@ extension MovieSearchViewController: UITableViewDataSource {
             selectFavoriteMovie(at: indexPath.row)
         } else if movie.favoriteStatus == .unchecked {
             favoriteButtonState = .unchecked
-            deselectFavoriteMovie()
+            deselectFavoriteMovie(examining: movie.title)
         }
         
         cell.bind(MovieTableViewCellModel(metaData: movie, cellIndex: indexPath.row, favoriteButtonState: Observable(favoriteButtonState)))
@@ -122,8 +122,8 @@ extension MovieSearchViewController: UITableViewDataSource {
         return cell
     }
     
-    private func deselectFavoriteMovie() {
-        favoriteTableViewModel.removeUnfavoriteMovie()
+    private func deselectFavoriteMovie(examining title: String) {
+        favoriteTableViewModel.removeUnfavoriteMovie(cheking: title)
     }
     
     private func selectFavoriteMovie(at index: Int) {

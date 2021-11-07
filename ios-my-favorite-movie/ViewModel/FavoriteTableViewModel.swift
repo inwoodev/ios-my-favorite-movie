@@ -10,8 +10,8 @@ import Foundation
 final class FavoriteMovieTableViewModel {
     private (set) var favoriteList: Observable<[MetaData]> = Observable([])
     
-    func removeUnfavoriteMovie() {
-        let filteredList = favoriteList.value?.filter { $0.favoriteStatus == .unchecked }
+    func removeUnfavoriteMovie(cheking title: String) {
+        let filteredList = favoriteList.value?.filter { $0.title != title }
         favoriteList.value = filteredList
     }
     

@@ -107,7 +107,7 @@ extension FavoriteMovieViewController: UITableViewDelegate {
 // MARK: - MovieRemoveDelegate
 
 extension FavoriteMovieViewController: MovieRemoveDelegate {
-    func removeUncheckedMovie() {
-        favoriteMovieTableViewModel.removeUnfavoriteMovie()
+    func removeUncheckedMovie(using title: String) {
+        favoriteMovieTableViewModel.removeUnfavoriteMovie(cheking: title)
     }
 }

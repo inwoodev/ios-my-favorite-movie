@@ -8,5 +8,5 @@
 import Foundation
 
 protocol MovieRemoveDelegate: AnyObject {
-    func removeUncheckedMovie()
+    func removeUncheckedMovie(using title: String)
 }

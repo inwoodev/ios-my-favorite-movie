@@ -53,7 +53,8 @@ final class FavoriteMovieTableViewCell: UITableViewCell {
     }
     
     @objc private func onTappedUnfavoriteMovieButton(_ sender: UIButton) {
-        self.delegate?.removeUncheckedMovie()
+        guard let movieTitle = movieTitleLabel.text else { return }
+        self.delegate?.removeUncheckedMovie(using: movieTitle)
     }
     
     private func addSubviews() {
