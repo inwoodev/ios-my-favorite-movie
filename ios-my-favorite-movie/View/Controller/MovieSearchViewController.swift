@@ -6,10 +6,11 @@
 //
 
 import UIKit
+import SafariServices
 
-class MovieSearchViewController: UIViewController {
+final class MovieSearchViewController: UIViewController {
     private let movieTableViewModel = MovieTableViewModel()
-    
+    private let favoriteTableViewModel = FavoriteMovieTableViewModel()
     private let movieTableView: UITableView = {
         let tableView = UITableView()
         tableView.backgroundColor = .white
@@ -18,6 +19,8 @@ class MovieSearchViewController: UIViewController {
         tableView.rowHeight = 150
         return tableView
     }()
+    
+    private lazy var favoriteMovieButton = UIBarButtonItem(barButtonSystemItem: .bookmarks, target: self, action: #selector(pushToFavoriteMoviePage))
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,6 +46,7 @@ class MovieSearchViewController: UIViewController {
         navigationItem.title = "네이버 영화 검색"
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.hidesSearchBarWhenScrolling = true
+        navigationItem.rightBarButtonItem = favoriteMovieButton
     }
     
     private func addSubviews() {
@@ -51,6 +55,7 @@ class MovieSearchViewController: UIViewController {
     
     private func assignDelegates() {
         movieTableView.dataSource = self
+        movieTableView.delegate = self
     }
     
     private func setViewConstraints() {
@@ -69,6 +74,11 @@ class MovieSearchViewController: UIViewController {
                 self?.movieTableView.reloadData()
             }
         }
+    }
+    
+    @objc private func pushToFavoriteMoviePage() {
+        let favoriteMovieViewController = FavoriteMovieViewController(favoriteMovieTableViewModel: favoriteTableViewModel)
+        navigationController?.pushViewController(favoriteMovieViewController, animated: false)
     }
 
 }
@@ -95,10 +105,51 @@ extension MovieSearchViewController: UITableViewDataSource {
               let movie = movieTableViewModel.movieInformation.value?[indexPath.row] else {
             return UITableViewCell()
         }
+        cell.delegate = self
         
-        cell.bind(MovieTableViewCellModel(movie: movie))
+        var favoriteButtonState = FavoriteButtonState.unchecked
+        if movie.favoriteStatus == .checked {
+            favoriteButtonState = .checked
+            selectFavoriteMovie(at: indexPath.row)
+        } else if movie.favoriteStatus == .unchecked {
+            favoriteButtonState = .unchecked
+            deselectFavoriteMovie()
+        }
+        
+        cell.bind(MovieTableViewCellModel(metaData: movie, cellIndex: indexPath.row, favoriteButtonState: Observable(favoriteButtonState)))
         cell.fire()
         
         return cell
+    }
+    
+    private func deselectFavoriteMovie() {
+        favoriteTableViewModel.removeUnfavoriteMovie()
+    }
+    
+    private func selectFavoriteMovie(at index: Int) {
+        guard let selectedMovie = movieTableViewModel.movieInformation.value?[index] else { return }
+        
+        favoriteTableViewModel.addFavoriteMovie(selectedMovie: selectedMovie)
+        
+    }
+}
+
+// MARK: - UITableViewDelegate
+
+extension MovieSearchViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let movieLink = movieTableViewModel.movieInformation.value?[indexPath.row].link,
+              let movieURL = try? movieLink.convertToURL() else { return }
+        let safariViewController = SFSafariViewController(url: movieURL)
+        
+        present(safariViewController, animated: true, completion: nil)
+    }
+}
+
+// MARK: - FavoriteMovieSelectable
+
+extension MovieSearchViewController: FavoriteMovieSelectionDelegate {
+    func handleFavoriteMovieStatus(at index: Int) {
+        movieTableViewModel.handleFavoriteMovieStatus(of: index)
     }
 }
